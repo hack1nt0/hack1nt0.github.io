@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+ 
+ <title>Tom Preston-Werner</title>
+ <link href="http://tom.preston-werner.com/atom.xml" rel="self"/>
+ <link href="http://tom.preston-werner.com/"/>
+ <updated>2016-10-20T02:12:57+08:00</updated>
+ <id>http://tom.preston-werner.com/</id>
+ <author>
+   <name>Tom Preston-Werner</name>
+   <email>tom@mojombo.com</email>
+ </author>
+
+ 
+ <entry>
+   <title>DNN求导</title>
+   <link href="http://tom.preston-werner.com/2015/04/13/DNN-derivative.html"/>
+   <updated>2015-04-13T00:00:00+08:00</updated>
+   <id>http://tom.preston-werner.com/2015/04/13/DNN-derivative</id>
+   <content type="html">&lt;h1 id=&quot;dnn&quot;&gt;DNN求导&lt;/h1&gt;
+
+&lt;p&gt;==============&lt;/p&gt;
+
+&lt;p&gt;13 Apr 2015 - Beijing&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;注：下文的专有名词如果不见特别限定(标量、矩阵)，都表示向量；符号右上标表示其属于哪一层，右下标表示其哪一维度，左上标表示其属于哪一个训练样本。&lt;/strong&gt; &lt;strong&gt;DNN的结构：&lt;/strong&gt;[Norm, Sigmod, Softmax, CrossEntropy(CE)]**&lt;/p&gt;
+
+&lt;p&gt;符号系统：&lt;script type=&quot;math/tex&quot;&gt;z^i&lt;/script&gt; -&amp;gt; 第i层的输入，&lt;script type=&quot;math/tex&quot;&gt;a^i&lt;/script&gt; -&amp;gt; 第i层的输出，&lt;script type=&quot;math/tex&quot;&gt;W^i&lt;/script&gt; -&amp;gt; 第i层的变换矩阵，&lt;script type=&quot;math/tex&quot;&gt;b^i&lt;/script&gt; -&amp;gt; 第i层的偏置，&lt;script type=&quot;math/tex&quot;&gt;L(lables)&lt;/script&gt; -&amp;gt; 先验类别布尔向量&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://ofb2ysj1w.bkt.clouddn.com/long%E8%BD%AC%E5%9E%8Bdouble%E5%A4%B1%E8%B4%A5.tiff?imageView/1/w/800/h/600&quot; alt=&quot;Image.pic&quot; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;forward-propagation&quot;&gt;Forward Propagation:&lt;/h2&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;z^0 = x^0&lt;/script&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;a^0 = norm(z^0)&lt;/script&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;z^1 = a^0 * W^1 + b^1&lt;/script&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;a^1 = sigmod(z^1)&lt;/script&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;z^2 = a^1 * W^2 + b^2&lt;/script&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;a^2 = softmax(z^2)&lt;/script&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;z^3 = a^2&lt;/script&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;a^3 = CE(z^3, L)&lt;/script&gt;
+
+&lt;h2 id=&quot;cost-function&quot;&gt;Cost Function:&lt;/h2&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;f(x, W, b, L) = a^3&lt;/script&gt;
+
+&lt;h2 id=&quot;back-propagation&quot;&gt;Back Propagation:&lt;/h2&gt;
+
+&lt;p&gt;Layer 3:&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;\frac{\partial f}{\partial z^3}&lt;/script&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;= \frac{\partial CE(z^3, L)}{\partial z^3}&lt;/script&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;= \frac{\partial{\sum_i{z^3_i * log(L_i)}}}{\partial z^3}&lt;/script&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;= [-\frac{L_i}{a^3_i}] {1 * colN(z^3)}&lt;/script&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;= \delta_3&lt;/script&gt;
+
+&lt;p&gt;Layer 2:&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;\frac{\partial f}{\partial z^2}&lt;/script&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;= \frac{\partial f}{\partial z^3} * \frac{\partial z^3}{\partial z^2}&lt;/script&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;= \delta_3 * \frac{\partial z^3}{\partial z^2}&lt;/script&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;= \delta_3 * \frac{\partial softmax(z^2)}{\partial z^2}&lt;/script&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;= \delta_3 * Diag_{rowN(z^2) _colN(z^2)} {e[i, i] = softmax(z^2, i)(1 - softmax(z^2, i))}&lt;/script&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;= \delta_2&lt;/script&gt;
+
+&lt;hr /&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;\frac{\partial f}{\partial W^2}&lt;/script&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;=\frac{\partial f}{\partial z^2} * \frac{\partial z^2}{\partial W^2}&lt;/script&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;=\delta_2 \frac{\partial (a^1 W^2 + b2)}{\partial{W^2}}&lt;/script&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;=\delta_2 * [a^1]^T_{colN(W^2)*1}&lt;/script&gt;
+
+&lt;hr /&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;\frac{\partial{f}}{\partial{b^2}}&lt;/script&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;=\frac{\partial{f}}{\partial{z^2}} * \frac{\partial{z^2}}{\partial{b^2}}&lt;/script&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;=\delta_2 \frac{\partial{a^1 W^2 + b2}}{\partial{b^2}}&lt;/script&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;=\delta_2&lt;/script&gt;
+
+&lt;p&gt;Layer 1:&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;\frac{\partial{f}}{\partial{z^1}}&lt;/script&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;=\frac{\partial{f}}{\partial{z^2}} * \frac{\partial{z^2}}{\partial{z^1}}&lt;/script&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;=\delta_2 * \frac{\partial{z^2}}{\partial{z^1}}&lt;/script&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;=\delta_2 * \frac{\partial{sigmod(z^1)}}{\partial{z^1}}&lt;/script&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;=\delta_2 \times sigmod(z^1) \times (1 - sigmod(z^1))&lt;/script&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;=\delta_1&lt;/script&gt;
+
+&lt;hr /&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;\frac{\partial{f}}{\partial{W^1}}&lt;/script&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;=\frac{\partial{f}}{\partial{z^1}} * \frac{\partial{z^1}}{\partial{W^1}}&lt;/script&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;=\delta_1 \times \frac{\partial (a^0 W^1 + b1)}{\partial{W^1}}&lt;/script&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;=\delta_1 * [a^0]^T_{colN(W^1)*1}&lt;/script&gt;
+
+&lt;hr /&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;\frac{\partial{f}}{\partial{b^1}}&lt;/script&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;=\frac{\partial{f}}{\partial{z^1}} * \frac{\partial{z^1}}{\partial{b^1}}&lt;/script&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;=\delta_1 \times \frac{\partial (a^0 W^1 + b1)}{\partial{b^1}}&lt;/script&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;=1 \delta_1&lt;/script&gt;
+</content>
+ </entry>
+ 
+ <entry>
+   <title>中文分词八卦</title>
+   <link href="http://tom.preston-werner.com/2014/09/04/Tokenizer-of-Chinese.html"/>
+   <updated>2014-09-04T00:00:00+08:00</updated>
+   <id>http://tom.preston-werner.com/2014/09/04/Tokenizer-of-Chinese</id>
+   <content type="html">&lt;h1 id=&quot;section&quot;&gt;中文分词八卦&lt;/h1&gt;
+
+&lt;p class=&quot;meta&quot;&gt;04 Sep 2014 - Beijing&lt;/p&gt;
+
+&lt;p&gt;1，HMM对于没有出现过的字的处理——直接将发射概率赋值无穷小&lt;/p&gt;
+
+&lt;p&gt;2，HMM如何融入二元语言模型&lt;/p&gt;
+</content>
+ </entry>
+ 
+ <entry>
+   <title>Leaving For Beijing</title>
+   <link href="http://tom.preston-werner.com/2014/06/30/Leaving-For-Beijing.html"/>
+   <updated>2014-06-30T00:00:00+08:00</updated>
+   <id>http://tom.preston-werner.com/2014/06/30/Leaving-For-Beijing</id>
+   <content type="html">&lt;h1 id=&quot;leaving-for-beijing&quot;&gt;Leaving For Beijing&lt;/h1&gt;
+
+&lt;p class=&quot;meta&quot;&gt;30 Jun 2014 - Shanghai&lt;/p&gt;
+
+&lt;p&gt;今天中午退掉了房子，寄走了行李，正式启动了离开上海的进程。由于可能还需要回学校拿一些资料，还需要在快捷酒店小住几晚。&lt;/p&gt;
+
+&lt;p&gt;熟悉的如家，熟悉的纸质拖鞋，地点选在了“熟悉”的交通大学地铁站附近。闲来无事，出去走走，交大老校区附近我就来过一次，当时饭点的时候吃了一次四海游龙，很不好的感觉，因为不管点什么东西都是甜的，北方汉子真心享受不了。之后就匆匆离开了。这次选了一个面馆，面非常厚道，二十几块的牛肉面，里面的牛肉最后都剩了好几块，到这里已经可以肯定不是那些所谓的台湾牛肉面了，哈。这个面馆还有烧烤，点了蒜蓉生蚝，威海的生蚝是我的初恋，也是绝恋，因为自那以后再没有吃过那么入味的。毕业后一直没有回去过，一开始是觉得没有必要，慢慢就变成不敢了，除了不能释怀的时间维度上的乡愁，我是真的怕那些为数不多的美好的记忆也并不真实。不过这里的生蚝还行，起码蒜有蒜味。&lt;/p&gt;
+
+&lt;p&gt;走了没两步，看到了一家酒吧，徘徊了一阵，进去了。之所以徘徊，主要是看到她的门口有弦乐表演，我还没在酒吧看到过吉他和架子鼓外的其他乐器，但这里却有既视感。询问了一下是一家酒吧和餐厅的合体店。点了杯啤酒，顺便研究了一下他们的酒单，上面五花八门分类详尽，&lt;script type=&quot;math/tex&quot;&gt;Soft \ Drink&lt;/script&gt;、咖啡、威士忌、白兰地、金酒、伏特加、红酒、白酒还有层出不穷的调配酒。这份菜单真称得上&lt;script type=&quot;math/tex&quot;&gt;manual&lt;/script&gt;了，好奇他们的菜单是不是也包罗万象。我本身酒量不大，在学校的时候应经算酒量垫底的，比较戏剧性的是，我在老家的哥们们酒量更差，所以显得我很海量，呵呵，倒是很享受这种衣锦还乡的感觉。某个东西接触的多了，慢慢她的方方面面的细节就顺水推舟，针对酒这一块，就是开始用一些半感性半理性的味觉体验区分开不同种类的酒。其实很多东西我都是通过这种方式记住的，比如音乐，听周结巴的歌，一是感觉旋律好词够骚，二是听他们时正是我的初高中时代，他们一定程度上就代表了我的那些岁月。听说结巴周要结婚了，这里祝福一下。&lt;/p&gt;
+
+&lt;p&gt;酒足饭饱思淫欲，以下不表。看完荷兰对智利，结束了离别行程的第一天。&lt;/p&gt;
+</content>
+ </entry>
+ 
+ <entry>
+   <title>写作计划</title>
+   <link href="http://tom.preston-werner.com/2014/06/28/Post-Planning.html"/>
+   <updated>2014-06-28T00:00:00+08:00</updated>
+   <id>http://tom.preston-werner.com/2014/06/28/Post-Planning</id>
+   <content type="html">&lt;h1 id=&quot;section&quot;&gt;写作计划&lt;/h1&gt;
+
+&lt;p class=&quot;meta&quot;&gt;28 Jun 2014 - Shanghai&lt;/p&gt;
+
+&lt;p&gt;从今天起我就正式开始自己的算法应用系列。这里的算法主要是一些编程思想，比如&lt;script type=&quot;math/tex&quot;&gt;divide \ and \ conquer&lt;/script&gt;、动态规划和贪心，还包括一些模型，比如图模型、&lt;script type=&quot;math/tex&quot;&gt;RMQ&lt;/script&gt;问题模型，我本人之所以推崇这些为形而上的思想，就是考虑到他们往往是难题的阿喀琉斯之踵：或者给难题找到一个合适的模型将其规约，或者用包罗万象的算法将其&lt;script type=&quot;math/tex&quot;&gt;ad \ hoc&lt;/script&gt;。&lt;/p&gt;
+
+&lt;p&gt;这一系列重在应用。学富五车，但是应用起来却往往捉襟见肘，这很难不让我得出“享受已有、应用先验也是一种能力”的结论。打个比喻，在机器学习中，学一堆理论就像知道一堆模型和算法，而应用这些理论就像根据需求套用合适的模型、数据预处理等步骤。应用这种看似是吃现成的纯工程的活，之所以会令人捉襟见肘，在于他的本质是一种问题域的转化，想想图模型中最大独立集和最小覆盖集的转化，想想&lt;script type=&quot;math/tex&quot;&gt;NPC&lt;/script&gt;问题之间的转化和判定，再想想&lt;script type=&quot;math/tex&quot;&gt;DP&lt;/script&gt;中问题的从无到有、从有后效性到无后效性的转化。这种转化更加宏观，也更加抽象，更加难。这不禁让我想起虚拟机（&lt;script type=&quot;math/tex&quot;&gt;JVM&lt;/script&gt;），他将原始语言转化为了中间语言，而后者往往优点多多（跨平台、&lt;script type=&quot;math/tex&quot;&gt;JIT&lt;/script&gt;）。&lt;/p&gt;
+
+&lt;p&gt;另一个重应用的原因，我自己的见解，理论知识往往有了自己的性格色彩才容易被记住（确切的说，不容易被忘）。举个例子，平民窟的百万富翁，这部电影中男主由于阅历丰富，记住了很多改变命运的“理论知识”。男主与这知识对应的阅历五花八门，欢乐、恐惧、悲伤，对于观众来说，这些知识折磨脑细胞，但是对于男主确是自己生命中独一无二的有鲜活生命的记忆。同样的，如果死记硬背，得到的理论往往金针菇了。他们没有性格色彩，或者有的只是一些投机侥幸贪婪懒惰，在自己的脑世界中很快就被淘汰了。相反，如果你是在久旱逢甘霖中遇到了她，或者是在蓦然回首看到她，又或者是她的石榴裙下鬼，那么她就有了生命。&lt;/p&gt;
+
+&lt;p&gt;作为一篇碎碎念的启动仪式演讲稿，我重点分析了重在算法的应用的原因，两个，一是她本身就是一门艺术，二是她是一种对理论知识的生命授予。正好今天在微博上看到一句话，大意是当一个人有激情的做着自己喜欢的事情，同时又对社会需求有满足的作用，那么他就具备了成功的条件。这里的他和算法的应用不禁被我抽象成了一体，我在接下来的系列文章中，争取为“应用”先生创造出成功的条件。&lt;/p&gt;
+</content>
+ </entry>
+ 
+ <entry>
+   <title>换工作</title>
+   <link href="http://tom.preston-werner.com/2014/06/15/Seeking-for-Work.html"/>
+   <updated>2014-06-15T00:00:00+08:00</updated>
+   <id>http://tom.preston-werner.com/2014/06/15/Seeking-for-Work</id>
+   <content type="html">&lt;h1 id=&quot;section&quot;&gt;换工作&lt;/h1&gt;
+
+&lt;p class=&quot;meta&quot;&gt;15 Jun 2014 - Shanghai&lt;/p&gt;
+
+&lt;p&gt;换工作的原因，我实在是不想说了。作为一个刚刚工作了两、三个月就换工作的毕业生，你再去面试的每一个公司都会问你这个原因，甚至每一轮的面试官都会问。所以就算你本来混混沌沌，最后也差不多倒背如流了。无非就是工作环境不满意，自己松散，领导不满意，最后不得不走。&lt;/p&gt;
+
+&lt;p&gt;接下来就是投简历、面试。这里重点介绍一下各个公司面试的内容，温故知新，下周还有几个面试呢。&lt;/p&gt;
+
+&lt;p&gt;神马搜索，我是六月初面的，面的实习职位，做一些类似实体搜索的工作。三轮，电面基本流程：项目经验介绍、操作系统、编程语言、算法。操作系统问了&lt;script type=&quot;math/tex&quot;&gt;Linux&lt;/script&gt;网络编程的&lt;script type=&quot;math/tex&quot;&gt;API&lt;/script&gt;和流程，算法问了两个，分别是&lt;script type=&quot;math/tex&quot;&gt;Top \ K&lt;/script&gt;问题和两个链表是否相交的判断。二面考察的基本是相同的知识点，但是深入了很多：&lt;script type=&quot;math/tex&quot;&gt;TCP&lt;/script&gt;协议的一些细节，比如&lt;script type=&quot;math/tex&quot;&gt;TIME\_WAIT&lt;/script&gt;状态相关，线程同步的实现机制，比如读写锁和自旋锁，&lt;script type=&quot;math/tex&quot;&gt;C++&lt;/script&gt;语言相关，比如&lt;script type=&quot;math/tex&quot;&gt;Profile&lt;/script&gt;的一些工具，虚表的实现等。算法是白纸上写一个判断&lt;script type=&quot;math/tex&quot;&gt;IP&lt;/script&gt;字符串有效性的函数。三面是&lt;script type=&quot;math/tex&quot;&gt;boss&lt;/script&gt;面，没问技术，说了一下工作安排。最后是&lt;script type=&quot;math/tex&quot;&gt;HR&lt;/script&gt;面，说明了一些待遇问题。&lt;/p&gt;
+
+&lt;p&gt;由于是实习，所以可能难度不是很大，但是最后的&lt;script type=&quot;math/tex&quot;&gt;boss&lt;/script&gt;和&lt;script type=&quot;math/tex&quot;&gt;HR&lt;/script&gt;都非常的诚恳，是当时为止给我印象最好的招聘方。最后因为这个岗位转正不明朗，加上因为自己已经毕业了，所以不能实习而只能挂着兼职，没有饭补等福利，所以最终没去。这一次经历，也最终让我下定了直接投社会招聘的决心。就在六月中旬，神马搜索完全并入了阿里巴巴，也就不再是之前&lt;script type=&quot;math/tex&quot;&gt;boss&lt;/script&gt;自谦的小公司了，祝愿他们的团队在移动搜索有好的发展。&lt;/p&gt;
+
+&lt;p&gt;当当网的&lt;script type=&quot;math/tex&quot;&gt;NLP&lt;/script&gt;工程师，电面是&lt;script type=&quot;math/tex&quot;&gt;HR&lt;/script&gt;直接约了去现场面试。笔试，基本的算法、编程语言和&lt;script type=&quot;math/tex&quot;&gt;NLP&lt;/script&gt;领域知识和项目经验介绍。算法有三个，大数据的排序问题，有着数据空间为正整数的特殊性，位运算问题，对整数进行位反转，还有就是数列中找两个满足固定和的位置的问题。编程语言考察了&lt;script type=&quot;math/tex&quot;&gt;c++&lt;/script&gt;的内存分布，比如什么类型的变量存在哪个区。&lt;script type=&quot;math/tex&quot;&gt;NLP&lt;/script&gt;主要是一些开放性的题目，设计中文分词、正文抽取中用到的模型和算法。一面是直接&lt;script type=&quot;math/tex&quot;&gt;boss&lt;/script&gt;，一直详细的看着我的笔试答卷，要求详细讲解了一个算法问题，并且提出了一个变种再让现场做。接着要求自选一个机器学习问题，然后进行详细的建模和计算过程说明，我选择了逻辑回归。面试中直接&lt;script type=&quot;math/tex&quot;&gt;boss&lt;/script&gt;问的非常广，他本人是个博士，所以我比较谨慎，不太了解的尽量不说，但是还是被问到无语，比如&lt;script type=&quot;math/tex&quot;&gt;TF-IDF&lt;/script&gt;的缺点、&lt;script type=&quot;math/tex&quot;&gt;LDA&lt;/script&gt;等。二面的面试官身份不明，非常严肃，也是仔细审查了笔试答卷，直接指出了大数据排序的算法太&lt;script type=&quot;math/tex&quot;&gt;trival&lt;/script&gt;，并没有利用数据空间的特殊性，接着问了&lt;script type=&quot;math/tex&quot;&gt;c ++&lt;/script&gt;的问题，strcpy的实现。接着对我写的项目经验狂问，二面问的真心深。&lt;script type=&quot;math/tex&quot;&gt;HR&lt;/script&gt;面，说明了本公司的福利。&lt;/p&gt;
+
+&lt;p&gt;当当网从去年起开始发力技术，在此基础上营业额取得了很大的增长。今年京东高调上市，早年上市的当当的股票也跟着涨了涨。作为初次尝试社会招聘，本来并没有志在必得的决心，其实一直到&lt;script type=&quot;math/tex&quot;&gt;HR&lt;/script&gt;面自己心里都没底。一面被问的面红耳赤，二面被问到释然。&lt;script type=&quot;math/tex&quot;&gt;HR&lt;/script&gt;季姐非常真诚，也热情，前前后后给我打了三、四个电话，在得之我正在面试其他家公司的时候，给了我对其他公司的一些客观认识。你的真诚真是响当当啊。&lt;/p&gt;
+
+&lt;p&gt;搜狗，搜索研发工程师，网页搜索部排序组，是他们的核心部门核心组。电面了很标准，项目经验，讲述一个搜索引擎的构成模块，游戏&lt;script type=&quot;math/tex&quot;&gt;AI&lt;/script&gt;的设计，比如&lt;script type=&quot;math/tex&quot;&gt;2048&lt;/script&gt;，问了有没有设计过象棋之类的游戏&lt;script type=&quot;math/tex&quot;&gt;AI&lt;/script&gt;。等待现场面试中。&lt;/p&gt;
+
+&lt;p&gt;搜狗的现场面试被我放在了离开北京的最后一天的下午。一面问了网络编程，自己设计实现&lt;script type=&quot;math/tex&quot;&gt;httpd&lt;/script&gt;，在这之前一直问线程池的实现和有没有使用过&lt;script type=&quot;math/tex&quot;&gt;C++&lt;/script&gt;的一些高级库，信息检索的知识没有问。接着让我做了一套笔试题，这套题大致分语言、领域知识和算法三个部分，语言我答了&lt;script type=&quot;math/tex&quot;&gt;C++&lt;/script&gt;和&lt;script type=&quot;math/tex&quot;&gt;Java&lt;/script&gt;，前者比较难的是内存对齐等知识点（规则很容易忘吧），后者主要是线程和异常机制等知识点，算法题有两个，一个是给定一个随机数生成器，以此为基础构造另一个随机数生成器，这两个生成器的样本空间相同，&lt;script type=&quot;math/tex&quot;&gt;[0, 1]&lt;/script&gt;，但是生成概率不同，比如前者是&lt;script type=&quot;math/tex&quot;&gt;[p, 1 - p]&lt;/script&gt;，后者要求等概率。另一个考察预处理，要求线性时间内求出&lt;script type=&quot;math/tex&quot;&gt;O[i] = A[0]*...*A[i - 1]*A[i + 1]*...*A[N - 1], i \in [0, N]&lt;/script&gt;。然后就没有然后了。&lt;/p&gt;
+
+&lt;p&gt;面搜狗时，我已经有四个&lt;script type=&quot;math/tex&quot;&gt;offer&lt;/script&gt;了，所以难免心里有些懈怠，再加上我从面试官那里可以听出他们非常急迫的在找熟练工，我自己也了解到搜狗搜索当时刚刚接入了微信公共账号内容，感觉就像富士通为了响应新款&lt;script type=&quot;math/tex&quot;&gt;IPhone&lt;/script&gt;的发布大规模招聘一样，个人确实能够发挥很大的社会价值，但前提你得是熟练工。面试官一直在问的一个问题是，工程和研究你到底哪一个可以马上变现，我想了想，哪一个都需要再努力啊。&lt;/p&gt;
+
+&lt;p&gt;百度，国际化产品部，数据分析工程师。百度的电面多了点，有三轮。一轮问了工作经验，要求举具体的例子，我提到了飞行道具目标位置的选定和攻击方的选定。算法问了二叉树中任意两点的最大距离，最后是项目相关，问了中文分词的一些算法和实现。二轮的面试官有着东北口音，幽默中带着嘲讽，这里的嘲讽主要集中在两个方面，一个是自己没有相关工作经验，二是自己的项目都比较简单。算法问了&lt;script type=&quot;math/tex&quot;&gt;BFS&lt;/script&gt;，好吧，估计是怕真正的算法我不会。三轮是&lt;script type=&quot;math/tex&quot;&gt;boss&lt;/script&gt;了，负责图片搜索，重点问了一些情商问题，比如离职原因，以后再遇到类似情况怎么处理。了解了熟悉的开发环境，我同时问了一下贵部的图片搜索和图片搜索部的关系，&lt;script type=&quot;math/tex&quot;&gt;boss&lt;/script&gt;说现场面试时候细聊。&lt;script type=&quot;math/tex&quot;&gt;HR&lt;/script&gt;面，安排了一下现场面试的时间。等待现场面试中。&lt;/p&gt;
+
+&lt;p&gt;百度的现场面试，一面比较发散，面试官是直接&lt;script type=&quot;math/tex&quot;&gt;boss&lt;/script&gt;，会先抛出一个基本问题，然后想到哪里问哪里。问了&lt;script type=&quot;math/tex&quot;&gt;strcpy&lt;/script&gt;的实现，&lt;script type=&quot;math/tex&quot;&gt;malloc&lt;/script&gt;的原理和实现，项目相关，双向链表的实现，主要集中在计算机体系结构和工程方面。二面主要问算法和领域知识，字符串枚举子集，怎么发现新词。三面是部门&lt;script type=&quot;math/tex&quot;&gt;boss&lt;/script&gt;了，详细的背景调查（高考分数，女朋友等），问了&lt;script type=&quot;math/tex&quot;&gt;C++&lt;/script&gt;中&lt;script type=&quot;math/tex&quot;&gt;static&lt;/script&gt;修饰符的作用，最后还问了几道智商题，给定几个数字，用四则运算得出目标值。&lt;/p&gt;
+
+&lt;p&gt;百度的面试我感觉表现一般，但第二天中午就收到了offer。百度给我的感觉就是确实比搜狗好出太多，包括办公环境，面试官的个人魅力等。可能唯一的遗憾就是百度的户口名额非常少，应届生都比较虚，我这种伪应届生连排队的必要也没有了。&lt;/p&gt;
+
+&lt;p&gt;小米，新技术工程师，隶属于&lt;script type=&quot;math/tex&quot;&gt;MIUI&lt;/script&gt;部门的新技术组。在线笔试，有必做和选做部分，必做是三个算法题，&lt;script type=&quot;math/tex&quot;&gt;atoi&lt;/script&gt;、单字符串查找、并查集。选做部分是设计一个微博系统。电面很标准，项目经验，问了有没有参加过领域相关的比赛，算法问了一个零一背包问题。面试官听起来年纪比较大，非常冷静，非常难以忽悠。等待现场面试中。&lt;/p&gt;
+
+&lt;p&gt;小米的面试比较简单，一面还是电面的人，直接&lt;script type=&quot;math/tex&quot;&gt;boss&lt;/script&gt;，详细问了项目经验，问了有没有关注过深度学习的最新发展，详细了解了我毕设的东西，让在白纸上写了一个&lt;script type=&quot;math/tex&quot;&gt;strcmp&lt;/script&gt;。二面是组&lt;script type=&quot;math/tex&quot;&gt;boss&lt;/script&gt;，意思比较明显，想留我，用小米4的工程机给我演示了&lt;script type=&quot;math/tex&quot;&gt;MIUI&lt;/script&gt;中的生态系统，说明了最近和未来可能的工作内容，最后说看我的笔试成绩很好就不考我白纸&lt;script type=&quot;math/tex&quot;&gt;coding&lt;/script&gt;了。&lt;/p&gt;
+
+&lt;p&gt;小米的面试给我的感觉是比较务实，一方面面试官不会因为你的自吹自擂就貌似肯定的点点头，而是会深入的了解，另一方面是笔试题考察的算法层次比较高，还有面试官对领域知识的了解比较多。&lt;/p&gt;
+</content>
+ </entry>
+ 
+ 
+</feed>

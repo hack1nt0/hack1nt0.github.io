@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+<head>
+   <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+   <title>DNN求导</title>
+   <meta name="author" content="hack1nt0" />
+<!--   <link href="http://feeds.feedburner.com/tom-preston-werner" rel="alternate" title="Tom Preston-Werner" type="application/atom+xml" /> -->
+
+	<!-- MathJax -->
+	<script type="text/javascript"
+	src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+	</script>
+
+   <!-- syntax highlighting CSS -->
+   <link rel="stylesheet" href="/css/syntax.css" type="text/css" />
+
+   <!-- Homepage CSS -->
+   <link rel="stylesheet" href="/css/screen.css" type="text/css" media="screen, projection" />
+
+   <!-- Typekit -->
+   <script type="text/javascript" src="http://use.typekit.com/jpd0pfm.js"></script>
+   <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+</head>
+<body>
+
+<!-- ClickTale Top part -->
+<script type="text/javascript">
+var WRInitTime=(new Date()).getTime();
+</script>
+<!-- ClickTale end of Top part -->
+
+<div class="site">
+  <div class="title">
+    <a href="https://github.com/hack1nt0">projects</a>
+    <a class="extra" href="/">blogs</a>
+  </div>
+  
+  <div id="post">
+<h1 id="dnn">DNN求导</h1>
+
+<p>==============</p>
+
+<p>13 Apr 2015 - Beijing</p>
+
+<p><strong>注：下文的专有名词如果不见特别限定(标量、矩阵)，都表示向量；符号右上标表示其属于哪一层，右下标表示其哪一维度，左上标表示其属于哪一个训练样本。</strong> <strong>DNN的结构：</strong>[Norm, Sigmod, Softmax, CrossEntropy(CE)]**</p>
+
+<p>符号系统：<script type="math/tex">z^i</script> -&gt; 第i层的输入，<script type="math/tex">a^i</script> -&gt; 第i层的输出，<script type="math/tex">W^i</script> -&gt; 第i层的变换矩阵，<script type="math/tex">b^i</script> -&gt; 第i层的偏置，<script type="math/tex">L(lables)</script> -&gt; 先验类别布尔向量</p>
+
+<p><img src="http://ofb2ysj1w.bkt.clouddn.com/long%E8%BD%AC%E5%9E%8Bdouble%E5%A4%B1%E8%B4%A5.tiff?imageView/1/w/800/h/600" alt="Image.pic" /></p>
+
+<h2 id="forward-propagation">Forward Propagation:</h2>
+
+<script type="math/tex; mode=display">z^0 = x^0</script>
+
+<script type="math/tex; mode=display">a^0 = norm(z^0)</script>
+
+<script type="math/tex; mode=display">z^1 = a^0 * W^1 + b^1</script>
+
+<script type="math/tex; mode=display">a^1 = sigmod(z^1)</script>
+
+<script type="math/tex; mode=display">z^2 = a^1 * W^2 + b^2</script>
+
+<script type="math/tex; mode=display">a^2 = softmax(z^2)</script>
+
+<script type="math/tex; mode=display">z^3 = a^2</script>
+
+<script type="math/tex; mode=display">a^3 = CE(z^3, L)</script>
+
+<h2 id="cost-function">Cost Function:</h2>
+
+<script type="math/tex; mode=display">f(x, W, b, L) = a^3</script>
+
+<h2 id="back-propagation">Back Propagation:</h2>
+
+<p>Layer 3:</p>
+
+<script type="math/tex; mode=display">\frac{\partial f}{\partial z^3}</script>
+
+<script type="math/tex; mode=display">= \frac{\partial CE(z^3, L)}{\partial z^3}</script>
+
+<script type="math/tex; mode=display">= \frac{\partial{\sum_i{z^3_i * log(L_i)}}}{\partial z^3}</script>
+
+<script type="math/tex; mode=display">= [-\frac{L_i}{a^3_i}] {1 * colN(z^3)}</script>
+
+<script type="math/tex; mode=display">= \delta_3</script>
+
+<p>Layer 2:</p>
+
+<script type="math/tex; mode=display">\frac{\partial f}{\partial z^2}</script>
+
+<script type="math/tex; mode=display">= \frac{\partial f}{\partial z^3} * \frac{\partial z^3}{\partial z^2}</script>
+
+<script type="math/tex; mode=display">= \delta_3 * \frac{\partial z^3}{\partial z^2}</script>
+
+<script type="math/tex; mode=display">= \delta_3 * \frac{\partial softmax(z^2)}{\partial z^2}</script>
+
+<script type="math/tex; mode=display">= \delta_3 * Diag_{rowN(z^2) _colN(z^2)} {e[i, i] = softmax(z^2, i)(1 - softmax(z^2, i))}</script>
+
+<script type="math/tex; mode=display">= \delta_2</script>
+
+<hr />
+
+<script type="math/tex; mode=display">\frac{\partial f}{\partial W^2}</script>
+
+<script type="math/tex; mode=display">=\frac{\partial f}{\partial z^2} * \frac{\partial z^2}{\partial W^2}</script>
+
+<script type="math/tex; mode=display">=\delta_2 \frac{\partial (a^1 W^2 + b2)}{\partial{W^2}}</script>
+
+<script type="math/tex; mode=display">=\delta_2 * [a^1]^T_{colN(W^2)*1}</script>
+
+<hr />
+
+<script type="math/tex; mode=display">\frac{\partial{f}}{\partial{b^2}}</script>
+
+<script type="math/tex; mode=display">=\frac{\partial{f}}{\partial{z^2}} * \frac{\partial{z^2}}{\partial{b^2}}</script>
+
+<script type="math/tex; mode=display">=\delta_2 \frac{\partial{a^1 W^2 + b2}}{\partial{b^2}}</script>
+
+<script type="math/tex; mode=display">=\delta_2</script>
+
+<p>Layer 1:</p>
+
+<script type="math/tex; mode=display">\frac{\partial{f}}{\partial{z^1}}</script>
+
+<script type="math/tex; mode=display">=\frac{\partial{f}}{\partial{z^2}} * \frac{\partial{z^2}}{\partial{z^1}}</script>
+
+<script type="math/tex; mode=display">=\delta_2 * \frac{\partial{z^2}}{\partial{z^1}}</script>
+
+<script type="math/tex; mode=display">=\delta_2 * \frac{\partial{sigmod(z^1)}}{\partial{z^1}}</script>
+
+<script type="math/tex; mode=display">=\delta_2 \times sigmod(z^1) \times (1 - sigmod(z^1))</script>
+
+<script type="math/tex; mode=display">=\delta_1</script>
+
+<hr />
+
+<script type="math/tex; mode=display">\frac{\partial{f}}{\partial{W^1}}</script>
+
+<script type="math/tex; mode=display">=\frac{\partial{f}}{\partial{z^1}} * \frac{\partial{z^1}}{\partial{W^1}}</script>
+
+<script type="math/tex; mode=display">=\delta_1 \times \frac{\partial (a^0 W^1 + b1)}{\partial{W^1}}</script>
+
+<script type="math/tex; mode=display">=\delta_1 * [a^0]^T_{colN(W^1)*1}</script>
+
+<hr />
+
+<script type="math/tex; mode=display">\frac{\partial{f}}{\partial{b^1}}</script>
+
+<script type="math/tex; mode=display">=\frac{\partial{f}}{\partial{z^1}} * \frac{\partial{z^1}}{\partial{b^1}}</script>
+
+<script type="math/tex; mode=display">=\delta_1 \times \frac{\partial (a^0 W^1 + b1)}{\partial{b^1}}</script>
+
+<script type="math/tex; mode=display">=1 \delta_1</script>
+
+</div>
+
+<div id="related">
+  <h2>Related Posts</h2>
+  <ul class="posts">
+    
+      <li><span>04 Sep 2014</span> &raquo; <a href="/2014/09/04/Tokenizer-of-Chinese.html">中文分词八卦</a></li>
+    
+      <li><span>30 Jun 2014</span> &raquo; <a href="/2014/06/30/Leaving-For-Beijing.html">Leaving For Beijing</a></li>
+    
+      <li><span>28 Jun 2014</span> &raquo; <a href="/2014/06/28/Post-Planning.html">写作计划</a></li>
+    
+  </ul>
+</div>
+  
+  <div class="footer">
+    <div class="contact">
+      <p>
+        hack1nt0 <br />
+        jealousing@gmail.com
+      </p>
+    </div>
+    <div class="major">
+      <p>
+        <span> Compliers && NLP </span> <br />
+      </p>
+    </div>
+    <div class="rss">
+      <a href="http://feeds.feedburner.com/hack1nt0">
+        <img src="/images/rss.png" alt="Subscribe to RSS Feed" />
+      </a>
+    </div>
+  </div>
+</div>
+
+<a href="http://github.com/hack1nt0"><img style="position: absolute; top: 0; right: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_right_red_aa0000.png" alt="Fork me on GitHub" /></a>
+
+<!-- ClickTale Bottom part -->
+<div id="ClickTaleDiv" style="display: none;"></div>
+<script type="text/javascript">
+if(document.location.protocol!='https:')
+  document.write(unescape("%3Cscript%20src='http://s.clicktale.net/WRb.js'%20type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+if(typeof ClickTale=='function') ClickTale(206,0.3,"www03");
+</script>
+<!-- ClickTale end of Bottom part -->
+
+<!-- Google Analytics -->
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+var pageTracker = _gat._getTracker("UA-6016902-1");
+pageTracker._trackPageview();
+</script>
+<!-- Google Analytics end -->
+
+</body>
+</html>
