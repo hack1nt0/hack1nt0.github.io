@@ -1,0 +1,98 @@
+---
+title: "Smaller Scala"
+author: "hackinto"
+date: "2017年4月14日"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(DiagrammeR)
+```
+
+这篇文章是关于洛桑联邦理工学院（EPFL）的公开课<https://www.coursera.org/learn/progfun1>的总结和反思。Smaller指的是这里只会用用Scala写一些小程序，以及熟悉Scala的语法层面的问题。
+
+## 安装
+
+#### jdk
+
+JDK必须最先安装！
+
+#### sbt
+
+```
+brew install sbt
+sbt about
+```
+
+以上是Mac系统的，其他系统参照<https://github.com/lampepfl/progfun-wiki/blob/gh-pages/ToolsSetup.md>
+
+#### IDE
+
+选用Intellij IDEA作为IDE，必须安装Scala Plugin，然后打开或新建 **SBT-based Scala project**。
+
+标准的目录结构
+
+![](/Users/dy/Desktop/directory-list.png)
+
+#### libraries
+
+在项目主目录的build.sbt文件下加入如下格式的代码，已自动引入第三方库。下面是引入了好用的Scala单元测试库。
+
+```
+libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.6" % "test"
+```
+
+## 函数、数据和类型
+
+基本概念之间的关系
+
+```{r relations, echo=FALSE}
+grViz("
+  digraph class_hierarchies {
+    Function; Data; Method; Class; Object; Closure; Type
+  }
+      ")
+```
+
+------------------
+
+类层次图
+
+![](/Users/dy/Desktop/class-hierarchy.png)
+
+------------------
+
+#### Tricks
++ Nothing类型对应抛出异常的情况，他没有实例；Null类型只有null一个实例
++ `==`在Scala中等效于Java中对象的`equals`或原始类型的`==`，在需要引用比较的时候要有`eq`
++ Scala中的原始类型会进行自动封箱操作，所以性能至上的时候不要把原始类型当成对象使用，比如调用toString方法等
+
+#### 语法
+
+<https://github.com/lampepfl/progfun-wiki/blob/gh-pages/CheatSheet.md>
+
+<http://www.artima.com/pins1ed/index.html#TOC>
+
+## 数据结构
+
+Scala的集合层次<http://docs.scala-lang.org/tutorials/FAQ/collections.html>
+
+------------------
+
+![](/Users/dy/Desktop/lengend.png)
+
+------------------
+
+不可变集合
+
+![](/Users/dy/Desktop/immutable-collections.png)
+
+------------------
+
+可变集合
+
+![](/Users/dy/Desktop/mutable-collections.png)
+
+------------------
+
